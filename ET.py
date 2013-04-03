@@ -153,7 +153,7 @@ def measure_rpm(pin_number): #pass the pin number to the function.
     #print "Channel 0 = %.3f V" % (result * 0.0001875)
     result = (result * 0.0001875)
     #print result
-    rpm = 6297 * result 
+    rpm = 6496.3 * result - 88.159
     return rpm
 
 

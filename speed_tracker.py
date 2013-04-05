@@ -9,13 +9,22 @@ import threading
 from string import find
 from datetime import date, datetime,  timedelta, tzinfo
 import math
-    
+from socket import socket, SOCK_DGRAM, AF_INET
+
+print "speed tracker started"
+s = socket(AF_INET, SOCK_DGRAM) 
+s.connect(('google.com', 0)) 
+ip_address= s.getsockname() 
+
 dataset = 0
 #use pin7 (GPIO4) as recording switch input
 GPIO.setmode(GPIO.BOARD)
 GPIO.setup(7, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 et_lcd_clear_screen()
+et_lcd_message(1,"My IP address")
+et_lcd_message(2,ip_address[0])
+sleep(2)
 
 while 1:
     thermocouples = measure_temp()

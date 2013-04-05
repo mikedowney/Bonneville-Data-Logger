@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 from Adafruit_I2C import Adafruit_I2C
-from time import sleep, strftime
+from time import sleep, strftime, localtime
 import gps
 from string import find
 from datetime import date, datetime, time, timedelta, tzinfo
@@ -154,6 +154,8 @@ def measure_rpm(pin_number): #pass the pin number to the function.
     result = (result * 0.0001875)
     #print result
     rpm = 6496.3 * result - 88.159
+    if rpm < 0:
+        rpm = 0
     return rpm
 
 
@@ -173,7 +175,9 @@ def get_gps(time_offset):
     session.stream(gps.WATCH_ENABLE | gps.WATCH_NEWSTYLE)
     report_received = 0
     while report_received == 0:
+        #print "waiting"
         report = session.next() # wait for the next status message from the GPS receiver
+        #print "finished"
         #print report
         if report['class'] == 'TPV': # Wait for a 'TPV' report and display the current time
             if hasattr(report, 'time'):
@@ -237,7 +241,7 @@ def get_next_dataset(starttime):
 
 # ===========================================================================
 # read temperatures from 2 thermocouples and return their values
-# temperatures are reado from 2 MAX6675 thermocouple transducers read over an SPI bus
+# temperatures are read from 2 MAX6675 thermocouple transducers read over an SPI bus
 # ===========================================================================
 import RPi.GPIO as GPIO  
 import time      
@@ -293,7 +297,7 @@ def measure_temp():
     GPIO.output(SPI_SCLK,GPIO.LOW)  
     time.sleep(timedelay)  
     if GPIO.input(SPI_MISO):
-        print "thermocouple not detected"
+        print "thermocouple 1 not detected"
     
     #read device_id bit
     GPIO.output(SPI_SCLK,GPIO.HIGH)  
@@ -307,6 +311,7 @@ def measure_temp():
     GPIO.output(SPI_SCLK,GPIO.LOW)  
     time.sleep(timedelay)  
     
+    #print value
     temperature = 0.25*value-37
 
 
@@ -342,7 +347,7 @@ def measure_temp():
     GPIO.output(SPI_SCLK,GPIO.LOW)  
     time.sleep(timedelay)  
     if GPIO.input(SPI_MISO):
-        print "thermocouple not detected"
+        print "thermocouple 2 not detected"
     
     #read device_id bit
     GPIO.output(SPI_SCLK,GPIO.HIGH)  
@@ -356,6 +361,7 @@ def measure_temp():
     GPIO.output(SPI_SCLK,GPIO.LOW)  
     time.sleep(timedelay)  
     
+    #print value
     temperature2 = 0.25*value -37
     
     

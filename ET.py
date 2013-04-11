@@ -160,7 +160,7 @@ def measure_rpm(pin_number): #pass the pin number to the function.
 
 
 # ===========================================================================
-# used the GPSd daemon to parse the NMEA messages from a GPS receiver
+# use the GPSd daemon to parse the NMEA messages from a GPS receiver
 # currently using an Adafruit Ultimate GPS, but almost any UART based GPS should work
 # note that the UART port settings are set in the daemon and not in this function. 
 # 
@@ -217,7 +217,10 @@ def get_gps(time_offset):
     return gps_time, lat, longatude, speed, alt, mode_string;  #return data back from the receiver. 
  
     
-    
+# ===========================================================================
+# determine teh next available dataset number in the database and reserve it
+# all data inserted from this point on will use this new dataset nubmer
+# ===========================================================================
     
 def get_next_dataset(starttime):
     con=MySQLdb.connect(user="root",passwd="aviator",db="speed_tracker")
@@ -247,7 +250,9 @@ import RPi.GPIO as GPIO
 import time      
         
 def measure_temp():
-    timedelay=0.001
+    timedelay=0.00001
+    delay_between_reads = 50
+    first_bit_delay = 2
     # to use Raspberry Pi board pin numbers  
     GPIO.setmode(GPIO.BOARD)  
     GPIO.setwarnings(False)
@@ -266,19 +271,18 @@ def measure_temp():
     GPIO.output(SPI_CE,GPIO.HIGH)  
     GPIO.output(SPI_CE2,GPIO.HIGH)  
     GPIO.output(SPI_SCLK,GPIO.LOW)  
-    time.sleep(100*timedelay)  
+    time.sleep(delay_between_reads*timedelay)  
     
     #read Thermocouple1
     GPIO.output(SPI_CE,GPIO.LOW) 
-    time.sleep(timedelay)  
+    time.sleep(first_bit_delay*timedelay)  
     
     #read dummy sign bit
-    GPIO.output(SPI_SCLK,GPIO.HIGH)  
-    time.sleep(timedelay)  
-    GPIO.output(SPI_SCLK,GPIO.LOW)  
-    time.sleep(timedelay)  
+    #note that the first bit is read during the falling edge of the chip select pin
+    #this is a mistake in the datasheet shich says that you should read the data from the falling edge of the clock only
     if GPIO.input(SPI_MISO):
         print "sign error"
+
     #read temp values
     value = 0
     i = 15
@@ -310,25 +314,22 @@ def measure_temp():
     time.sleep(timedelay)  
     GPIO.output(SPI_SCLK,GPIO.LOW)  
     time.sleep(timedelay)  
-    
-    #print value
-    temperature = 0.25*value-37
+
+    temperature = 0.25*value
+
 
 
     #read Thermocouple2
     GPIO.output(SPI_CE,GPIO.HIGH) 
     GPIO.output(SPI_CE2,GPIO.HIGH) 
-    time.sleep(100*timedelay)
+    time.sleep(delay_between_reads*timedelay)
     GPIO.output(SPI_CE2,GPIO.LOW) 
-    time.sleep(timedelay)  
+    time.sleep(first_bit_delay*timedelay)  
     
     #read dummy sign bit
-    GPIO.output(SPI_SCLK,GPIO.HIGH)  
-    time.sleep(timedelay)  
-    GPIO.output(SPI_SCLK,GPIO.LOW)  
-    time.sleep(timedelay)  
     if GPIO.input(SPI_MISO):
         print "sign error"
+
     #read temp values
     value = 0
     i = 15
@@ -340,7 +341,7 @@ def measure_temp():
         time.sleep(timedelay)  
         if GPIO.input(SPI_MISO):
             value = value + 2**(i-3)
-    
+
     #read thermocouple_input bit
     GPIO.output(SPI_SCLK,GPIO.HIGH)  
     time.sleep(timedelay)  
@@ -360,12 +361,13 @@ def measure_temp():
     time.sleep(timedelay)  
     GPIO.output(SPI_SCLK,GPIO.LOW)  
     time.sleep(timedelay)  
-    
+
     #print value
-    temperature2 = 0.25*value -37
-    
+    temperature2 = 0.25*value
     
     GPIO.output(SPI_CE,GPIO.HIGH) 
     GPIO.output(SPI_CE2,GPIO.HIGH) 
-    time.sleep(100*timedelay)  
+    time.sleep(delay_between_reads*timedelay)  
+    #print temperature
+    #print temperature2
     return temperature, temperature2

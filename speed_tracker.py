@@ -10,21 +10,45 @@ from string import find
 from datetime import date, datetime,  timedelta, tzinfo
 import math
 from socket import socket, SOCK_DGRAM, AF_INET
+from subprocess import Popen, PIPE
+
 
 print "speed tracker started"
-s = socket(AF_INET, SOCK_DGRAM) 
-s.connect(('google.com', 0)) 
-ip_address= s.getsockname() 
+
+#determine the IP address of the ethernet and WIFI connections and show them on the screen for a few seconds on startup
+command = "/sbin/ifconfig"
+arg = "wlan0"
+output = Popen([command, arg], stdout=PIPE)
+output_string =  output.stdout.read()
+if output_string.find('inet addr:') > 0:
+    IP_ADDRESS1 = output_string[output_string.find('inet addr:')+10:output_string.find(' Bcast:')]
+else:
+    IP_ADDRESS1 = "none"
+arg = "eth0"
+output = Popen([command, arg], stdout=PIPE)
+output_string =  output.stdout.read()
+if output_string.find('inet addr:') > 0:
+    IP_ADDRESS2 = output_string[output_string.find('inet addr:')+10:output_string.find(' Bcast:')]
+else:
+    IP_ADDRESS2 = "none"
+
+line1 = "W%s" % IP_ADDRESS1
+line2 = "E%s" % IP_ADDRESS2
+#print line1
+#print line2
+et_lcd_clear_screen()
+et_lcd_message(1,line1)
+et_lcd_message(2,line2)
+sleep(1)
+
+
 
 dataset = 0
 #use pin7 (GPIO4) as recording switch input
 GPIO.setmode(GPIO.BOARD)
 GPIO.setup(7, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
-et_lcd_clear_screen()
-et_lcd_message(1,"My IP address")
-et_lcd_message(2,ip_address[0])
-sleep(2)
+
 
 while 1:
     thermocouples = measure_temp()

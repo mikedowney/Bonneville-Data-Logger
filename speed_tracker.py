@@ -54,7 +54,7 @@ while 1:
     thermocouples = measure_temp()
     egt = thermocouples[0]
     cht = thermocouples[1]
-    rpm = measure_rpm(11) # measure pulse counter on pin 7 of the GPI0 port
+    rpm = measure_rpm(11) 
     #rpm = 500
     gps_data = get_gps(-4) # get the latest GPS data from the GPS receiver. parameter is time offset from GMT
     #print gps_data
